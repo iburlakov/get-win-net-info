@@ -17,7 +17,7 @@ namespace get_win_net_info
             this.manager = new NetworkListManagerClass();
         }
 
-        private string GetNetworkCaterogyString(NLM_NETWORK_CATEGORY cat)
+        private string GetNetworkCategoryString(NLM_NETWORK_CATEGORY cat)
         {
            return cat.ToString().Substring(nameof(NLM_NETWORK_CATEGORY).Length+1);
         }
@@ -36,13 +36,13 @@ namespace get_win_net_info
 
         private Dictionary<Guid, INetworkConnection> GetConnections()
         {
-            var dic = new Dictionary<Guid, INetworkConnection>();
-            foreach (INetworkConnection con in this.manager.GetNetworkConnections())
+            var dict = new Dictionary<Guid, INetworkConnection>();
+            foreach (INetworkConnection connection in this.manager.GetNetworkConnections())
             {
-                dic[con.GetAdapterId()] = con;
+                dict[connection.GetAdapterId()] = connection;
             }
 
-            return dic;
+            return dict;
         }
 
         public NetInfo[] GetNetworksInfo()
@@ -50,23 +50,27 @@ namespace get_win_net_info
             var infos = new List<NetInfo>();
 
             var networkConnections = this.GetConnections();
-            foreach (var netInterface in NetworkInterface.GetAllNetworkInterfaces()
+            foreach (var networkInterface in NetworkInterface.GetAllNetworkInterfaces()
                 .Where(ni => ni.OperationalStatus == OperationalStatus.Up && ni.NetworkInterfaceType != NetworkInterfaceType.Loopback))
             {
-                if (Guid.TryParse(netInterface.Id, out var adapterId))
+                if (Guid.TryParse(networkInterface.Id, out var adapterId))
                 {
                     if (networkConnections.TryGetValue(adapterId, out var networkConnection))
                     {
                         var network = networkConnection.GetNetwork();
 
-                        var ip = netInterface.GetIPProperties().UnicastAddresses
+                        var dns = networkInterface.GetIPProperties().DnsSuffix;
+                        var ip = networkInterface.GetIPProperties().UnicastAddresses
                             .FirstOrDefault(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
                             ?.Address ?? new IPAddress(new byte[4]);
 
-                        infos.Add(new NetInfo(network.GetName(),
-                            this.GetNetworkCaterogyString(network.GetCategory()),
-                            this.IsMetered(networkConnection),
-                            ip));
+                        infos.Add(
+                            new NetInfo(
+                                network.GetName(),
+                                dns,
+                                this.GetNetworkCategoryString(network.GetCategory()),
+                                this.IsMetered(networkConnection),
+                                ip));
                     }
                 }
             }
