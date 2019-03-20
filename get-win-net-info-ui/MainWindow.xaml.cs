@@ -1,17 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+
 using get_win_net_info;
 
 namespace get_win_net_info_ui
@@ -25,20 +14,28 @@ namespace get_win_net_info_ui
         {
             InitializeComponent();
 
-            var helper = new NetworkListManagerHelper();
-            var infos = helper.GetNetworksInfo();
+            try
+            {
+                var helper = new NetworkListManagerHelper();
+                var infos = helper.GetNetworksInfo();
 
-            if (infos.Length > 0)
-            {
-                this.infoTextBox.AppendText($"Detected {infos.Length} network{(infos.Length > 2 ? "s" : "")}:\n");
-                foreach (var info in infos)
+                if (infos.Length > 0)
                 {
-                    this.infoTextBox.AppendText(info.ToString() + "\n");
+                    this.infoTextBox.AppendText($"Detected {infos.Length} network{(infos.Length > 2 ? "s" : "")}:\n");
+                    foreach (var info in infos)
+                    {
+                        this.infoTextBox.AppendText(info.ToString() + "\n");
+                    }
                 }
+                else
+                {
+                    this.infoTextBox.AppendText("Not connected to any network");
+                }
+
             }
-            else
+            catch (Exception e)
             {
-                this.infoTextBox.AppendText("Not connected to any network");
+                this.infoTextBox.AppendText($"Error {e.Message}");
             }
         }
     }
